@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>N - Gen Voice Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Myanmar:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        myanmar: ['Noto Sans Myanmar', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#fdf2f2',
+                            100: '#fbe4e4',
+                            300: '#fca5a5',
+                            500: '#ef4444',
+                            600: '#dc2626',
+                            700: '#b91c1c',
+                            900: '#7f1d1d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            background-image: radial-gradient(at 0% 0%, hsla(0,0%,100%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(359,85%,90%,1) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 8px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 16px; width: 16px; border-radius: 50%;
+            background: #dc2626; cursor: pointer; margin-top: -6px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; cursor: pointer; background: #e2e8f0; border-radius: 2px;
+        }
+        input[type=range]:focus { outline: none; }
+    </style>
+</head>
+<body class="text-slate-800 font-sans min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="glass-card sticky top-0 z-50 px-6 py-4 flex justify-between items-center border-b border-white/50">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-brand-500/30">N</div>
+            <div>
+                <h1 class="text-xl font-bold tracking-tight text-slate-900 leading-none">N - Gen Voice Studio</h1>
+                <p class="text-xs text-slate-500 mt-1">Natural Voice. Clear Speech. Creator Ready.</p>
+            </div>
+        </div>
+        <div class="hidden sm:flex items-center gap-4 text-sm font-medium text-slate-500">
+            <span class="flex items-center gap-1"><i class="fa-solid fa-bolt text-amber-400"></i> Powered by Gemini AI</span>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-6">
+
+        <!-- Left Column -->
+        <div class="w-full lg:w-3/5 flex flex-col gap-4">
+
+            <div class="glass-card rounded-2xl p-1 flex flex-col h-[500px] lg:h-[600px] relative">
+                <div class="flex justify-between items-center px-4 py-3 border-b border-slate-100">
+                    <div class="flex gap-2">
+                        <button onclick="clearText()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Clear Text">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button onclick="copyText()" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors" title="Copy Text">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3 text-xs text-slate-500 font-medium bg-slate-50 px-3 py-1.5 rounded-full border border-slate-200">
+                        <span id="charCount">0 Characters</span>
+                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                        <span id="wordCount">0 Words</span>
+                        <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                        <span id="estDuration"><i class="fa-regular fa-clock mr-1"></i>0s</span>
+                    </div>
+                </div>
+
+                <!-- No maxlength: any script length is accepted -->
+                <textarea id="scriptInput" class="w-full flex-grow p-5 pb-24 bg-transparent border-none focus:ring-0 resize-none font-myanmar text-base leading-relaxed text-slate-800 placeholder-slate-400" placeholder="Paste your Burmese or English script here...&#10;&#10;ဥပမာ - မင်္ဂလာပါ။ N-Gen Voice Studio မှ ကြိုဆိုပါတယ်။ သင်၏ စာသားများကို သဘာဝကျသော အသံအဖြစ်သို့ ပြောင်းလဲပေးပါမည်။"></textarea>
+
+                <div class="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur p-3 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800">Smart Voiceover Preparation</p>
+                            <p class="text-xs text-slate-500">Optimizes punctuation for better natural pauses.</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="smartPrep" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-500"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Status -->
+            <div id="statusArea" class="hidden rounded-xl p-4 flex items-start gap-3 border transition-all">
+                <div id="statusIcon" class="mt-0.5"></div>
+                <div class="flex-grow">
+                    <h3 id="statusTitle" class="font-semibold text-sm"></h3>
+                    <p id="statusMessage" class="text-sm mt-1 opacity-90 font-myanmar"></p>
+                    <div id="progressContainer" class="hidden mt-3">
+                        <div class="w-full bg-black/10 rounded-full h-1.5 overflow-hidden">
+                            <div id="progressBar" class="bg-current h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <p id="progressText" class="text-xs mt-1 text-right font-medium opacity-80"></p>
+                    </div>
+                    <button id="resumeBtn" onclick="resumeGeneration()" class="hidden mt-3 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg shadow transition-colors items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Resume from failed section
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column -->
+        <div class="w-full lg:w-2/5 flex flex-col gap-4">
+            <div class="glass-card rounded-2xl p-5 lg:p-6 shadow-sm border border-slate-100 flex flex-col gap-6">
+
+                <div>
+                    <label class="block text-sm font-semibold text-slate-900 mb-2">Voice Model</label>
+                    <div class="relative">
+                        <select id="voiceModel" class="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 pr-10 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-colors font-medium cursor-pointer">
+                            <option value="Iapetus|natural_male">VOICE 01 — Natural Male</option>
+                            <option value="Aoede|natural_female">VOICE 02 — Natural Female</option>
+                            <option value="Gacrux|deep_male">VOICE 03 — Deep Male</option>
+                            <option value="Vindemiatrix|soft_female">VOICE 04 — Soft Female</option>
+                            <option value="Fenrir|energetic_male">VOICE 05 — Energetic Male</option>
+                            <option value="Puck|energetic_female">VOICE 06 — Energetic Female</option>
+                            <option value="Charon|documentary">VOICE 07 — Documentary Male</option>
+                            <option value="Sadaltager|storyteller_male">VOICE 08 — Storyteller Male</option>
+                            <option value="Sulafat|storyteller_female">VOICE 09 — Storyteller Female</option>
+                            <option value="Schedar|calm">VOICE 10 — Calm Narrator</option>
+                            <option value="Orus|professional">VOICE 11 — Professional Presenter</option>
+                            <option value="Rasalgethi|recap">VOICE 12 — Movie Recap</option>
+                            <option value="Enceladus|mystery">VOICE 13 — Mystery</option>
+                            <option value="Achird|creator">VOICE 14 — Friendly Creator</option>
+                            <option value="Algieba|premium">VOICE 15 — Premium Narrator</option>
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <i class="fa-solid fa-chevron-down text-sm"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full h-px bg-slate-100"></div>
+
+                <div class="flex flex-col gap-5">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-semibold text-slate-700">Speed</label>
+                            <span id="speedValue" class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">1.00x</span>
+                        </div>
+                        <input type="range" id="speed" min="0.75" max="1.3" step="0.05" value="1.0">
+                        <div class="flex justify-between text-[10px] text-slate-400 mt-1 font-medium">
+                            <span>Slower</span><span>Normal</span><span>Faster</span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Pitch</label>
+                            <select id="pitch" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                <option value="low">Low</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="high">High</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Expression</label>
+                            <select id="expression" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                <option value="low">Low</option>
+                                <option value="natural" selected>Natural</option>
+                                <option value="expressive">Expressive</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Pauses</label>
+                            <select id="pauses" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                <option value="short">Short</option>
+                                <option value="natural" selected>Natural</option>
+                                <option value="long">Long</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Clarity</label>
+                            <select id="clarity" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-500">
+                                <option value="standard">Standard</option>
+                                <option value="enhanced" selected>Enhanced</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-2 flex gap-3">
+                    <button onclick="resetSettings()" class="flex-1 py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl transition-colors text-sm border border-slate-200 shadow-sm">
+                        Reset Defaults
+                    </button>
+                    <button id="generateBtn" onclick="onGenerateClick()" class="flex-[2] py-3 px-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-700 hover:to-brand-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-brand-500/30 flex items-center justify-center gap-2 transform active:scale-[0.98]">
+                        <i class="fa-solid fa-microphone-lines"></i> Generate Voice
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Audio Player Area -->
+    <div id="playerArea" class="hidden max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 pt-0 flex flex-col gap-4">
+        <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">Generated Audio Files</h2>
+
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+            <p class="text-sm text-slate-500" id="audioSegmentsInfo">0 Segments</p>
+            <div class="flex gap-2">
+                <button id="playAllBtn" onclick="playAllSegments()" class="hidden px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium rounded-lg shadow transition-colors items-center gap-2">
+                    <i class="fa-solid fa-play"></i> Play All
+                </button>
+                <button id="downloadAllBtn" onclick="downloadMerged()" class="hidden px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium rounded-lg shadow transition-colors items-center gap-2">
+                    <i class="fa-solid fa-download"></i> Download Full Audio (WAV)
+                </button>
+            </div>
+        </div>
+
+        <div id="audioList" class="flex flex-col gap-3"></div>
+    </div>
+
+    <script>
+        // ================= Settings =================
+        const API_URL = '/api/tts';          // Vercel serverless function (keys stay on the server)
+        const CHUNK_SIZE = 700;              // max characters per request
+        const DELAY_BETWEEN_CHUNKS_MS = 4000; // free-tier friendly pause between requests
+        const MAX_RETRIES = 5;               // retries per chunk
+        const GAP_MS = 350;                  // silence inserted between chunks in the merged file
+
+        // ================= State =================
+        let chunks = [];
+        let segments = [];        // { pcm: Int16Array, rate: number, url: string, text: string }
+        let nextIndex = 0;        // first chunk not generated yet
+        let isGenerating = false;
+        let cancelRequested = false;
+        let currentPlayingIndex = -1;
+        let mergedUrl = null;
+
+        // ================= DOM =================
+        const $ = (id) => document.getElementById(id);
+        const scriptInput = $('scriptInput');
+        const charCount = $('charCount');
+        const wordCount = $('wordCount');
+        const estDuration = $('estDuration');
+        const speedRange = $('speed');
+        const speedValue = $('speedValue');
+        const statusArea = $('statusArea');
+        const statusIcon = $('statusIcon');
+        const statusTitle = $('statusTitle');
+        const statusMessage = $('statusMessage');
+        const progressContainer = $('progressContainer');
+        const progressBar = $('progressBar');
+        const progressText = $('progressText');
+        const generateBtn = $('generateBtn');
+        const resumeBtn = $('resumeBtn');
+        const playerArea = $('playerArea');
+        const audioList = $('audioList');
+        const audioSegmentsInfo = $('audioSegmentsInfo');
+        const playAllBtn = $('playAllBtn');
+        const downloadAllBtn = $('downloadAllBtn');
+
+        scriptInput.addEventListener('input', updateStats);
+        speedRange.addEventListener('input', (e) => {
+            speedValue.textContent = parseFloat(e.target.value).toFixed(2) + 'x';
+        });
+
+        // ================= UI helpers =================
+        function updateStats() {
+            const text = scriptInput.value;
+            const chars = text.length;
+            const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+            const seconds = Math.round((words / 130) * 60);
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+            const timeStr = h > 0 ? `${h}h ${m}m` : (m > 0 ? `${m}m ${s}s` : `${s}s`);
+            charCount.textContent = `${chars.toLocaleString()} Characters`;
+            wordCount.textContent = `${words.toLocaleString()} Words`;
+            estDuration.innerHTML = `<i class="fa-regular fa-clock mr-1"></i>${timeStr}`;
+        }
+
+        function clearText() {
+            scriptInput.value = '';
+            updateStats();
+            hideStatus();
+        }
+
+        async function copyText() {
+            try {
+                await navigator.clipboard.writeText(scriptInput.value);
+            } catch {
+                scriptInput.select();
+                document.execCommand('copy');
+            }
+            showStatus('success', 'Copied!', 'Text copied to clipboard.');
+            setTimeout(hideStatus, 2000);
+        }
+
+        function resetSettings() {
+            $('voiceModel').selectedIndex = 0;
+            speedRange.value = 1.0;
+            speedValue.textContent = '1.00x';
+            $('pitch').value = 'normal';
+            $('expression').value = 'natural';
+            $('pauses').value = 'natural';
+            $('clarity').value = 'enhanced';
+            $('smartPrep').checked = true;
+        }
+
+        function showStatus(type, title, message, showProgress = false) {
+            statusArea.classList.remove('hidden', 'bg-blue-50', 'bg-red-50', 'bg-green-50', 'border-blue-200', 'border-red-200', 'border-green-200', 'text-blue-800', 'text-red-800', 'text-green-800');
+            resumeBtn.classList.add('hidden');
+            resumeBtn.classList.remove('flex');
+            if (type === 'info' || type === 'loading') {
+                statusArea.classList.add('bg-blue-50', 'border-blue-200', 'text-blue-800');
+                statusIcon.innerHTML = type === 'loading'
+                    ? '<i class="fa-solid fa-circle-notch fa-spin text-blue-600 text-lg"></i>'
+                    : '<i class="fa-solid fa-circle-info text-blue-600 text-lg"></i>';
+            } else if (type === 'error') {
+                statusArea.classList.add('bg-red-50', 'border-red-200', 'text-red-800');
+                statusIcon.innerHTML = '<i class="fa-solid fa-circle-exclamation text-red-600 text-lg"></i>';
+            } else if (type === 'success') {
+                statusArea.classList.add('bg-green-50', 'border-green-200', 'text-green-800');
+                statusIcon.innerHTML = '<i class="fa-solid fa-circle-check text-green-600 text-lg"></i>';
+            }
+            statusTitle.textContent = title;
+            statusMessage.textContent = message;
+            progressContainer.classList.toggle('hidden', !showProgress);
+        }
+
+        function updateProgress(percent, text) {
+            progressBar.style.width = `${percent}%`;
+            progressText.textContent = text;
+        }
+
+        function hideStatus() { statusArea.classList.add('hidden'); }
+
+        function setButtonState(generating) {
+            if (generating) {
+                generateBtn.innerHTML = '<i class="fa-solid fa-stop"></i> Stop';
+            } else {
+                generateBtn.innerHTML = '<i class="fa-solid fa-microphone-lines"></i> Generate Voice';
+            }
+        }
+
+        const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+        // ================= Generation =================
+        function onGenerateClick() {
+            if (isGenerating) {
+                cancelRequested = true;
+                generateBtn.disabled = true;
+                return;
+            }
+            startGeneration();
+        }
+
+        function resetOutputs() {
+            segments.forEach((s) => URL.revokeObjectURL(s.url));
+            if (mergedUrl) { URL.revokeObjectURL(mergedUrl); mergedUrl = null; }
+            segments = [];
+            nextIndex = 0;
+            currentPlayingIndex = -1;
+            audioList.innerHTML = '';
+            playAllBtn.classList.add('hidden');
+            playAllBtn.classList.remove('flex');
+            downloadAllBtn.classList.add('hidden');
+            downloadAllBtn.classList.remove('flex');
+            audioSegmentsInfo.textContent = '0 Segments';
+        }
+
+        function startGeneration() {
+            let text = scriptInput.value.trim();
+            if (!text) {
+                showStatus('error', 'Missing Input', 'စာသားမထည့်ရသေးပါဘူး။ Script ကို Paste လုပ်ပေးပါ။');
+                return;
+            }
+            if ($('smartPrep').checked) {
+                text = text.replace(/([။.!?])([^\s"'])/g, '$1 $2');
+                text = text.replace(/[ \t]{2,}/g, ' ');
+            }
+            resetOutputs();
+            chunks = segmentText(text, CHUNK_SIZE);
+            playerArea.classList.remove('hidden');
+            playerArea.classList.add('flex');
+            runQueue();
+        }
+
+        function resumeGeneration() {
+            if (isGenerating || nextIndex >= chunks.length) return;
+            runQueue();
+        }
+
+        async function runQueue() {
+            isGenerating = true;
+            cancelRequested = false;
+            generateBtn.disabled = false;
+            setButtonState(true);
+
+            try {
+                showStatus('loading', 'Preparing Voice...', `Script ကို ${chunks.length} ပိုင်း ခွဲထားပါတယ်။`, true);
+
+                while (nextIndex < chunks.length) {
+                    if (cancelRequested) throw new Error('__cancelled__');
+
+                    const i = nextIndex;
+                    updateProgress(Math.round((i / chunks.length) * 100), `Section ${i + 1} / ${chunks.length}`);
+                    showStatus('loading', 'Generating...', `Section ${i + 1} / ${chunks.length} ကို ဖန်တီးနေပါတယ်။`, true);
+                    updateProgress(Math.round((i / chunks.length) * 100), `Section ${i + 1} / ${chunks.length}`);
+
+                    const seg = await generateChunk(chunks[i], i);
+                    segments.push(seg);
+                    renderAudioSegment(seg, i + 1);
+                    nextIndex = i + 1;
+                    audioSegmentsInfo.textContent = `${segments.length} / ${chunks.length} Segments`;
+                    revealPlayerButtons();
+
+                    if (nextIndex < chunks.length) {
+                        await interruptibleSleep(DELAY_BETWEEN_CHUNKS_MS);
+                    }
+                }
+
+                updateProgress(100, 'Done');
+                showStatus('success', 'Completed Successfully', 'အသံဖန်တီးခြင်း အောင်မြင်ပါသည်။ "Download Full Audio" ကိုနှိပ်ပြီး တစ်ဖိုင်တည်း ဒေါင်းလုဒ်လုပ်နိုင်ပါတယ်။');
+                audioSegmentsInfo.textContent = `${segments.length} Segments Generated`;
+            } catch (error) {
+                if (error.message === '__cancelled__') {
+                    showStatus('info', 'Stopped', `${segments.length} ပိုင်း ပြီးသွားပါပြီ။ ဆက်လုပ်ချင်ရင် Resume ကိုနှိပ်ပါ။`);
+                } else {
+                    console.error('Generation Error:', error);
+                    showStatus('error', 'Generation Failed', `Section ${nextIndex + 1} မှာ ပျက်သွားပါတယ်။ ${error.message}`);
+                }
+                if (nextIndex < chunks.length) {
+                    resumeBtn.classList.remove('hidden');
+                    resumeBtn.classList.add('flex');
+                }
+            } finally {
+                isGenerating = false;
+                generateBtn.disabled = false;
+                setButtonState(false);
+            }
+        }
+
+        async function interruptibleSleep(ms) {
+            const step = 250;
+            for (let t = 0; t < ms; t += step) {
+                if (cancelRequested) return;
+                await sleep(step);
+            }
+        }
+
+        function revealPlayerButtons() {
+            if (segments.length > 1) {
+                playAllBtn.classList.remove('hidden');
+                playAllBtn.classList.add('flex');
+            }
+            if (segments.length > 0) {
+                downloadAllBtn.classList.remove('hidden');
+                downloadAllBtn.classList.add('flex');
+            }
+        }
+
+        function segmentText(text, maxLength) {
+            const paragraphs = text.split(/\n+/);
+            const out = [];
+            paragraphs.forEach((p) => {
+                const para = p.trim();
+                if (!para) return;
+                if (para.length <= maxLength) { out.push(para); return; }
+
+                const sentences = para.split(/(?<=[။.!?])\s*/).filter(Boolean);
+                let temp = '';
+                const flush = () => { if (temp) { out.push(temp); temp = ''; } };
+
+                sentences.forEach((s) => {
+                    if (s.length > maxLength) {
+                        flush();
+                        // Very long sentence: split on spaces / commas without breaking words
+                        const parts = s.split(/(?<=[,၊;:])\s*|\s+/).filter(Boolean);
+                        let buf = '';
+                        parts.forEach((w) => {
+                            if ((buf + ' ' + w).length > maxLength) { if (buf) out.push(buf); buf = w; }
+                            else buf = buf ? buf + ' ' + w : w;
+                        });
+                        if (buf) out.push(buf);
+                    } else if ((temp + ' ' + s).length <= maxLength) {
+                        temp = temp ? temp + ' ' + s : s;
+                    } else {
+                        flush();
+                        temp = s;
+                    }
+                });
+                flush();
+            });
+            return out;
+        }
+
+        async function generateChunk(text, index) {
+            let lastError = null;
+            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                if (cancelRequested) throw new Error('__cancelled__');
+                try {
+                    return await fetchTTS(text);
+                } catch (error) {
+                    lastError = error;
+                    // Wait longer when keys are busy (rate limit), shorter otherwise
+                    const wait = error.status === 429
+                        ? (error.retryAfter || 20) * 1000
+                        : Math.pow(2, attempt) * 1500;
+                    if (attempt < MAX_RETRIES - 1) {
+                        showStatus('loading', 'Waiting to retry...',
+                            `Section ${index + 1}: ${Math.round(wait / 1000)} စက္ကန့်စောင့်ပြီး ပြန်ကြိုးစားနေပါတယ် (${attempt + 1}/${MAX_RETRIES - 1})`, true);
+                        updateProgress(Math.round((index / chunks.length) * 100), `Section ${index + 1} / ${chunks.length}`);
+                        await interruptibleSleep(wait);
+                    }
+                }
+            }
+            throw lastError || new Error('Unknown error');
+        }
+
+        function buildPrompt(textChunk) {
+            const [, profileId] = $('voiceModel').value.split('|');
+            const speed = parseFloat($('speed').value);
+            const pitch = $('pitch').value;
+            const expression = $('expression').value;
+            const pauses = $('pauses').value;
+            const clarity = $('clarity').value;
+
+            let p = `Speak the following text in highly natural, clear, and fluent Burmese (Myanmar language). `;
+            p += `Ensure correct syllable articulation and human-like intonation. DO NOT use robotic tones. `;
+
+            if (speed < 0.9) p += `Speak slowly and clearly. `;
+            else if (speed > 1.1) p += `Speak at a slightly faster, energetic pace. `;
+
+            if (pitch === 'low') p += `Use a deep, low-pitched voice. `;
+            else if (pitch === 'high') p += `Use a high-pitched voice. `;
+
+            if (expression === 'expressive') p += `Deliver with strong emotion, highly expressive tone, and dynamic energy. `;
+            else if (expression === 'low') p += `Deliver in a calm, flat, neutral tone. `;
+            else p += `Deliver with natural, conversational expression. `;
+
+            if (pauses === 'long') p += `Include long, dramatic pauses between sentences. `;
+            else if (pauses === 'short') p += `Keep pauses minimal for continuous flow. `;
+
+            if (clarity === 'enhanced') p += `Enunciate every word perfectly clearly for professional voice-over. `;
+
+            if (profileId === 'storyteller_male' || profileId === 'storyteller_female' || profileId === 'recap') {
+                p += `Read this like you are telling an engaging story or a movie recap. `;
+            } else if (profileId === 'documentary') {
+                p += `Read this like a serious documentary narrator. `;
+            } else if (profileId === 'creator') {
+                p += `Read this like a casual, friendly content creator talking to viewers. `;
+            }
+
+            return `${p}\n\nText:\n${textChunk}`;
+        }
+
+        async function fetchTTS(textChunk) {
+            const [voiceName] = $('voiceModel').value.split('|');
+
+            const payload = {
+                contents: [{ parts: [{ text: buildPrompt(textChunk) }] }],
+                generationConfig: {
+                    responseModalities: ['AUDIO'],
+                    speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } }
+                }
+            };
+
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payload })
+            });
+
+            const result = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                const err = new Error(result?.error?.message || `Server error (${response.status})`);
+                err.status = response.status;
+                err.retryAfter = result?.retryAfter;
+                throw err;
+            }
+
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            const audioBase64 = part?.inlineData?.data;
+            const mimeType = part?.inlineData?.mimeType;
+
+            if (!audioBase64 || !mimeType || !mimeType.startsWith('audio/')) {
+                throw new Error('Gemini returned no audio for this section.');
+            }
+
+            let rate = 24000;
+            const m = mimeType.match(/rate=(\d+)/);
+            if (m) rate = parseInt(m[1], 10);
+
+            const bytes = base64ToBytes(audioBase64);
+            const pcm = new Int16Array(bytes.buffer, bytes.byteOffset, Math.floor(bytes.byteLength / 2));
+            const url = URL.createObjectURL(pcmToWav(pcm, rate));
+            return { pcm, rate, url, text: textChunk };
+        }
+
+        // ================= Audio utilities =================
+        function base64ToBytes(base64) {
+            const bin = atob(base64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const numChannels = 1, bitsPerSample = 16;
+            const byteRate = sampleRate * numChannels * (bitsPerSample / 8);
+            const blockAlign = numChannels * (bitsPerSample / 8);
+            const dataSize = pcmData.length * 2;
+            const buffer = new ArrayBuffer(44 + dataSize);
+            const view = new DataView(buffer);
+
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + dataSize, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, byteRate, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitsPerSample, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, dataSize, true);
+
+            let offset = 44;
+            for (let i = 0; i < pcmData.length; i++, offset += 2) view.setInt16(offset, pcmData[i], true);
+            return new Blob([buffer], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, str) {
+            for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+        }
+
+        function downloadMerged() {
+            if (segments.length === 0) return;
+            const rate = segments[0].rate;
+            const gap = Math.round((GAP_MS / 1000) * rate);
+            const total = segments.reduce((sum, s) => sum + s.pcm.length, 0) + gap * (segments.length - 1);
+            const merged = new Int16Array(total); // zero-filled = silence
+            let pos = 0;
+            segments.forEach((s, i) => {
+                merged.set(s.pcm, pos);
+                pos += s.pcm.length + (i < segments.length - 1 ? gap : 0);
+            });
+            if (mergedUrl) URL.revokeObjectURL(mergedUrl);
+            mergedUrl = URL.createObjectURL(pcmToWav(merged, rate));
+            const a = document.createElement('a');
+            a.href = mergedUrl;
+            a.download = 'N-Gen_Voice_Full.wav';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+
+        // ================= Rendering & playback =================
+        function renderAudioSegment(seg, index) {
+            const div = document.createElement('div');
+            div.className = 'glass-card p-4 rounded-xl border border-slate-200 flex flex-col sm:flex-row gap-4 items-start sm:items-center transition-all group';
+            div.id = `segment-${index - 1}`;
+
+            const badge = document.createElement('div');
+            badge.className = 'flex-shrink-0 w-10 h-10 bg-slate-100 text-slate-500 rounded-full flex items-center justify-center font-bold text-sm border border-slate-200';
+            badge.textContent = index;
+
+            const body = document.createElement('div');
+            body.className = 'flex-grow min-w-0 w-full';
+            const p = document.createElement('p');
+            p.className = 'text-sm font-myanmar text-slate-700 truncate w-full';
+            p.textContent = seg.text.length > 80 ? seg.text.slice(0, 80) + '...' : seg.text;
+            p.title = seg.text;
+            const audio = document.createElement('audio');
+            audio.id = `audio-el-${index - 1}`;
+            audio.controls = true;
+            audio.className = 'w-full h-8 outline-none mt-2';
+            audio.src = seg.url;
+            body.append(p, audio);
+
+            const dl = document.createElement('a');
+            dl.href = seg.url;
+            dl.download = `N-Gen_Voice_Seg_${index}.wav`;
+            dl.title = 'Download WAV';
+            dl.className = 'flex-shrink-0 p-2 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors flex items-center gap-2 text-sm font-medium';
+            dl.innerHTML = '<i class="fa-solid fa-download"></i><span class="sm:hidden">Download</span>';
+
+            div.append(badge, body, dl);
+            audioList.appendChild(div);
+
+            audio.addEventListener('ended', () => {
+                if (currentPlayingIndex === index - 1 && currentPlayingIndex < segments.length - 1) {
+                    playSegment(currentPlayingIndex + 1);
+                } else {
+                    currentPlayingIndex = -1;
+                    clearHighlights();
+                }
+            });
+        }
+
+        function clearHighlights() {
+            for (let i = 0; i < segments.length; i++) {
+                $(`segment-${i}`)?.classList.remove('ring-2', 'ring-brand-500');
+            }
+        }
+
+        function playAllSegments() {
+            if (segments.length) playSegment(0);
+        }
+
+        function playSegment(index) {
+            if (index < 0 || index >= segments.length) return;
+            for (let i = 0; i < segments.length; i++) {
+                const el = $(`audio-el-${i}`);
+                if (el && i !== index) el.pause();
+            }
+            clearHighlights();
+            currentPlayingIndex = index;
+            const seg = $(`segment-${index}`);
+            seg.classList.add('ring-2', 'ring-brand-500');
+            seg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            $(`audio-el-${index}`).play();
+        }
+
+        updateStats();
+    </script>
+</body>
+</html>
